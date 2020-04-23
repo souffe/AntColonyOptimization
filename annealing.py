@@ -95,7 +95,7 @@ class Annealing(object):
                 road = road + str(cities_list[i].getDistance(next_city_id)) + ' -> '
         
         road = road + f' ({totalDistance})'
-        print(road)
+        #print(road)
         return totalDistance
     
     # Switches 2 randomly chosen cities in the list
@@ -118,12 +118,13 @@ class Annealing(object):
     
     # Go through annealing algorithm
     def anneal(self):
+        start = time.time()
         # Find random way between the cities
         random.shuffle(self.cities)
         currentDistance = 0 
         
         for temperature in range(self.Tmax, self.Tmin, -self.Tstep):
-            sp.call('clear',shell=True)
+            #sp.call('clear',shell=True)
 
             currentDistance = self.calculateTotalDistance()
             #print(f"Current Distance: {currentDistance}")
@@ -149,7 +150,12 @@ class Annealing(object):
             
             #time.sleep(0.1)
 
+        end = time.time()
+        timeInSeconds = round(end-start,2)
+        timeInSeconds = str(timeInSeconds) + 's'
+
         print(f'Distance found: {currentDistance}')
+        print(f'Time of execution: {timeInSeconds}')
         #self.showCities()
 
 A = Annealing(1000,5,5)
