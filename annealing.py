@@ -102,13 +102,14 @@ class Annealing(object):
     # And returns a copy of this list (NOT CHANGING THE MAIN LIST)
     def switchCities(self):
         cities_amount = len(self.cities)
-        index1 = random.randrange(cities_amount)
-        index2 = random.randrange(cities_amount)
-
+        # The first city in the list should not be changed
+        index1 = random.randrange(1,cities_amount)
+        index2 = random.randrange(1,cities_amount)
+        
         cities_buffer = self.cities.copy()
 
         while index2 == index1:
-            index2 = random.randrange(cities_amount)
+            index2 = random.randrange(2,cities_amount)
 
         tmp = cities_buffer[index1]
         cities_buffer[index1] = cities_buffer[index2]
@@ -148,7 +149,7 @@ class Annealing(object):
                 #print(f'Temp: {temperature}')
                 #print(f'% chance: {percent}%')
             
-            #time.sleep(0.1)
+            #time.sleep(0.5)
 
         end = time.time()
         timeInSeconds = round(end-start,2)
