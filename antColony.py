@@ -103,6 +103,7 @@ class Colony(object):
         self.Q = Q
         self.ants = list()
         self.all_roads = list()
+        self.initRoadsFromFile()
         
     def addRoad(self, road):
         self.all_roads.append(road)
@@ -112,8 +113,32 @@ class Colony(object):
     
     def initRoadsFromFile(self):
         f = open("data.txt", "r")
+        f1 = f.readlines()
+
+        for row in range(1, len(f1)):
+            line = f1[row]
+            distances = list()
+            #print(repr(line))
+            number = ''
+            for i in range(len(line)):
+                if line[i].isdigit():
+                    number = number + str(line[i])
+                else:
+                    if number.isdigit():
+                        x = int(number)
+                        distances.append(x)
+                        number = ''
+
+            for i in range(len(distances)):
+                r = Road(distances[i], row-1, i)
+                self.addRoad(r)
+
+    def showRoads(self):
+        for road in self.all_roads:
+            print(f'Road: {road.getDistance()}')
 
 if __name__ == "__main__":
     road = Road(10, 1, 2)
     a = Ant(1, 5)
     c = Colony(1, 2, 3, 4, 5, 6)
+    c.showRoads()
