@@ -344,22 +344,22 @@ class Colony(object):
 
     # Run ant colony algorithm step by step
     def runAlgorithm(self):
+        start = time.time()
         for t in range(self.iterations):
             for ant in self.ants:
                 for move_count in range(self.cities):
                     new_road = self.countProbability(ant)
-                    #if move_count == 9:
-                    #    print(f'Road {new_road.city1_id} - {new_road.city2_id}')
-                    #    print(f'Started from {ant.start_city_id}')
                     ant.move(new_road)
-                #ant.showAntDetails()
             
             self.updatePheromoneValue()
             # Reset ant memory        
             self.resetTravelData()
         
+        end = time.time()
         #self.showGeneralPheromoneLevel()
         self.showFinalResult()
+        timeInSeconds = round(end-start,2)
+        print(f'Time: {timeInSeconds} s')
     
     def showGeneralPheromoneLevel(self):
         for road in self.all_roads:
