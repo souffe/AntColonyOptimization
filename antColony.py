@@ -25,10 +25,17 @@ class Road(object):
         self.pheromone = 0    
     
     def showRoadData(self):
+        print('---')
         print(f'Distance: {self.distance}')
         print(f'From: {self.city1_id}')
         print(f'To: {self.city2_id}')
         print(f'Pheromone: {self.pheromone}')
+    
+    # Check if this road belongs to given city
+    def belongsToCity(self, city_id):
+        if self.city1_id == city_id or self.city2_id == city_id:
+            return True
+        return False
     
     def setPheromone(self, pheromone):
         self.pheromone = pheromone
@@ -47,6 +54,7 @@ class Ant(object):
         self.totalDistance = 0
         self.start_city_id = start_city
         self.currentCity = start_city
+        self.cities.append(self.currentCity)
 
     def resetTravelData(self):
         self.roads = list()
@@ -55,9 +63,8 @@ class Ant(object):
     
     # Move along the road
     def move(self, road):
-        # Remember this city as already visited
-        self.cities.append(self.currentCity)
-        
+        #print(f'Start city: {self.start_city_id}')
+        #print(f'Current city: {self.currentCity}')
         # Add distance of this road to total distance
         addDistance = road.getDistance()
         self.totalDistance = self.totalDistance + addDistance
@@ -69,6 +76,9 @@ class Ant(object):
         # Change the current city
         self.currentCity = newCity
 
+        # Remember this city as already visited
+        self.cities.append(self.currentCity)
+
         # Add this road to already used
         self.roads.append(road)
     
@@ -76,11 +86,18 @@ class Ant(object):
         print(f'Pheromone: {self.Qpheromone}')
         print(f'Begin city: {self.start_city_id}')
         print(f'Total distance: {self.totalDistance}')
+        #print(f'Current city: {self.currentCity}')
         roads_string = ''
         for road in self.roads: 
-            roads_string = roads_string + ' -> ' + str(road.getDistance())
+            roads_string = roads_string + str(road.getDistance()) + ' -> '
         
-        print(f'Road: {roads_string}')
+        cities_string = ''
+        for city in self.cities:
+            cities_string = cities_string + str(city) + ' -> '
+        
+        print(f'Distances: {roads_string}')
+        print(f'Cities: {cities_string}')
+        print("---")
 
     # The ant remembers given road
     # Road object is saved in roads list
@@ -225,25 +242,46 @@ class Colony(object):
         for road in roads:
             if road.getDistance() < shortest_road.getDistance():
                 shortest_road = road
+        
+        #print(f'Taking shortest road: {shortest_road.city1_id} - {shortest_road.city2_id} ({shortest_road.getDistance()})')
         return shortest_road
+
+    # Return all the roads the ant can take
+    def getAvailableRoads(self, ant):
+        available_roads = list()
+        for road in self.all_roads:
+            if ant.wentToRoad(road) == False:
+                if ant.currentCity == road.city1_id and ant.wentToCity(road.city2_id) == False:
+                    available_roads.append(road)
+                elif ant.currentCity == road.city2_id and ant.wentToCity(road.city1_id) == False:
+                    available_roads.append(road)
+        return available_roads
+
 
     # Count probability for ant k to move from city i to city j
     # Return the road with the highest probability
     def countProbability(self, ant):
-        available_roads = list()
-        # Get all the available roads from the current city
-        for road in self.all_roads:
-            if road.getDistance() > 0:
-                if road.city1_id == ant.currentCity or road.city2_id == ant.currentCity:
-                    if ant.wentToRoad(road) == False:
-                        available_roads.append(road)
+        available_roads = self.getAvailableRoads(ant)
         
         # If there are no available roads
         # Get back to the first city
         if not available_roads:
-            for road in all_roads:
-                if road.city1_id == ant.start_city_id or road.city2_id == ant.start_city_id:
+            for road in self.all_roads:
+                if road.city1_id == ant.start_city_id and road.city2_id == ant.currentCity:
+                    #print(f'Start City: {ant.start_city_id}')
+                    #print(f'Current city: {ant.currentCity}')
                     return road
+                elif road.city2_id == ant.start_city_id and road.city1_id == ant.currentCity:
+                    #print(f'Start City: {ant.start_city_id}')
+                    #print(f'Current city: {ant.currentCity}')
+                    return road
+
+        ### --- SHOW AVAILABLE ROADS --- ####
+        #print('---')
+        #print('AVAILABLE ROADS')
+        #for road in available_roads:
+        #    road.showRoadData()
+        ### --- SHOW AVAILABLE ROADS --- ####
 
         # Count denominator for the equation
         denominator = 0
@@ -253,6 +291,10 @@ class Colony(object):
             visibility = 1/road.getDistance()
             product = pheromone ** self.alpha * visibility ** self.beta
             denominator = denominator + product
+        
+        ### --- DENOMINATOR --- ###
+        #print(f'Denominator for this ants roads: {denominator}')
+        ### --- DENOMINATOR --- ###
 
         # When the road has no pheromone
         # Choose the shortest road
@@ -268,6 +310,11 @@ class Colony(object):
             probability = nominator/denominator
             #print(f'Probability: {probability}')
             probabilities.append(probability)
+        
+        ### --- PROBABILITIES FOR ROADS --- ###
+        #print('Probabilities for roads')
+        #print(f'{probabilities}')
+        ### --- PROBABILITIES FOR ROADS --- ###
 
         # Get highest probability
         highest_probability = 0
@@ -277,7 +324,17 @@ class Colony(object):
                 highest_probability = probabilities[i]
                 index_of_best_road = i
         
+        ### --- Highest probability and best index --- ###
+        #print(f'Best Probability: {highest_probability}, index: {index_of_best_road}')
+        ### --- Highest probability and best index --- ###
+
         best_road = available_roads[index_of_best_road]
+
+        ### --- BEST ROAD INFO --- ###
+        #print('BEST ROAD INFO')
+        #best_road.showRoadData()
+        ### --- BEST ROAD INFO --- ###
+
         return best_road 
     
     # Reset ants memory 
@@ -291,13 +348,18 @@ class Colony(object):
             for ant in self.ants:
                 for move_count in range(self.cities):
                     new_road = self.countProbability(ant)
+                    #if move_count == 9:
+                    #    print(f'Road {new_road.city1_id} - {new_road.city2_id}')
+                    #    print(f'Started from {ant.start_city_id}')
                     ant.move(new_road)
-                self.updatePheromoneValue()
-                ant.showAntDetails()
+                #ant.showAntDetails()
+            
+            self.updatePheromoneValue()
             # Reset ant memory        
             self.resetTravelData()
         
         #self.showGeneralPheromoneLevel()
+        self.showFinalResult()
     
     def showGeneralPheromoneLevel(self):
         for road in self.all_roads:
@@ -306,15 +368,52 @@ class Colony(object):
             print(f'Pheromone: {road.getPheromone()}')
             print("---")
 
-    def showFinalResult(self):
-        pass
+    # Show final path
+    def showFinalResult(self, city_id=None):
+        if city_id == None:
+            city_id = 0
+        
+        final_roads = list()
+
+        for i in range(self.cities):
+            roads_to_city = list()
+            # Get all the roads related to this city
+            for road in self.all_roads:
+                # check if road belongs to city and was not already taken
+                if road.belongsToCity(city_id) and not road in final_roads:
+                    roads_to_city.append(road)
+            
+            # Find one with highest amount of pheromone
+            highest_pheromone = 0
+            best_road = None
+            for road in roads_to_city:
+                if road.getPheromone() > highest_pheromone:
+                    highest_pheromone = road.getPheromone()
+                    best_road = road
+
+            # Save road into final path
+            final_roads.append(best_road)
+
+            # Change city for a new one city_id
+            if best_road.city1_id == city_id:
+                city_id = best_road.city2_id
+            elif best_road.city2_id == city_id:
+                city_id = best_road.city1_id
+
+        # Display the way and total distance
+        totalDistance = 0
+        for road in final_roads:
+            #road.showRoadData()
+            totalDistance = totalDistance + road.getDistance()
+            print(f'{road.getDistance()} -> ', end='')
+        print(f'Total: {totalDistance}')
             
 if __name__ == "__main__":
-    size = 10 # Size of the colony
-    iterations = 150 # Expected iterations
-    alpha = 10 # Pheromone attraction
-    beta = 2 # Short distance attraction
-    p = 0.7 # Evaporation constant
+    size = 120 # Size of the colony
+    iterations = 20 # Expected iterations
+    alpha = 100 # Pheromone attraction
+    beta = 5 # Short distance attraction
+    p = 0.5 # Evaporation constant
     Q = 5 # Ants pheromone constant
 
     c = Colony(size, iterations, alpha, beta, p, Q)
