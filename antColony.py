@@ -23,6 +23,19 @@ class Road(object):
         self.city1_id = city1
         self.city2_id = city2
         self.pheromone = 0    
+
+    # Define when 2 objects are equal
+    def __eq__(self, other):
+        if self.city1_id == other.city1_id and self.city2_id == other.city2_id:
+            return True
+        elif self.city2_id == other.city1_id and self.city1_id == other.city2_id:
+            return True
+        else:
+            return False
+
+    # Make object hashable
+    def __hash__(self):
+        return hash(('city1', self.city1_id, 'city2', self.city2_id, 'distance', self.distance))
     
     def showRoadData(self):
         print('---')
@@ -198,26 +211,14 @@ class Colony(object):
                     r = Road(distances[i], row-1, i)
                     self.addRoad(r)
         
-        self.removeRoadDuplicates(0)
+        self.removeRoadDuplicates()
 
-    def removeRoadDuplicates(self, begin_index):
-        for i in range(begin_index,len(self.all_roads)):
-            if i+1 < len(self.all_roads):
-                for j in range(i+1, len(self.all_roads)):
-                    if self.roadsEqual(self.all_roads[i], self.all_roads[j]):
-                        del self.all_roads[j]
-                        self.removeRoadDuplicates(i)
-                        return
+    def removeRoadDuplicates(self):
+        self.all_roads = list(dict.fromkeys(self.all_roads))
+        
+        #for road in self.all_roads:
+        #    road.showRoadData()
     
-    # Check if those 2 roads are the same
-    def roadsEqual(self, road1, road2):
-        if road1.city1_id == road2.city1_id and road1.city2_id == road2.city2_id:
-            return True
-        elif road1.city2_id == road2.city1_id and road1.city1_id == road2.city2_id:
-            return True
-        else:
-            return False
-
     # Init ants by creating objects and giving them a random start location
     def initAnts(self):
         for i in range(self.size):
@@ -409,8 +410,8 @@ class Colony(object):
         print(f'Total: {totalDistance}')
             
 if __name__ == "__main__":
-    size = 120 # Size of the colony
-    iterations = 20 # Expected iterations
+    size = 10 # Size of the colony
+    iterations = 3 # Expected iterations
     alpha = 100 # Pheromone attraction
     beta = 5 # Short distance attraction
     p = 0.5 # Evaporation constant
