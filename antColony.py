@@ -216,8 +216,8 @@ class Colony(object):
     def removeRoadDuplicates(self):
         self.all_roads = list(dict.fromkeys(self.all_roads))
         
-        #for road in self.all_roads:
-        #    road.showRoadData()
+        for road in self.all_roads:
+            road.showRoadData()
     
     # Init ants by creating objects and giving them a random start location
     def initAnts(self):
@@ -385,7 +385,7 @@ class Colony(object):
                     roads_to_city.append(road)
             
             # Find one with highest amount of pheromone
-            highest_pheromone = 0
+            highest_pheromone = -1
             best_road = None
             for road in roads_to_city:
                 if road.getPheromone() > highest_pheromone:
@@ -395,11 +395,12 @@ class Colony(object):
             # Save road into final path
             final_roads.append(best_road)
 
-            # Change city for a new one city_id
-            if best_road.city1_id == city_id:
-                city_id = best_road.city2_id
-            elif best_road.city2_id == city_id:
-                city_id = best_road.city1_id
+            if best_road is not None:
+                # Change city for a new one city_id
+                if best_road.city1_id == city_id:
+                    city_id = best_road.city2_id
+                elif best_road.city2_id == city_id:
+                    city_id = best_road.city1_id
 
         # Display the way and total distance
         totalDistance = 0
